@@ -43,6 +43,8 @@ public class EnvironmentNodeDto
 
     private Set<String> sshKeys = new HashSet<>();
 
+    private boolean activated = false;
+
 
     public EnvironmentNodeDto()
     {
@@ -264,5 +266,17 @@ public class EnvironmentNodeDto
     public void setHasDomain( final boolean hasDomain )
     {
         this.hasDomain = hasDomain;
+    }
+
+
+    public boolean isActivated()
+    {
+        return activated;
+    }
+
+
+    public void setActivated( final boolean activated )
+    {
+        this.activated = activated;
     }
 }

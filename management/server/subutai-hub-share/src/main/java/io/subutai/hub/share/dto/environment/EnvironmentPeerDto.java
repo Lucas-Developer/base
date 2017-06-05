@@ -60,6 +60,8 @@ public class EnvironmentPeerDto
 
     private String playbook;
 
+    private Set<EnvironmentNodeDto> operationNodes;
+
 
     public EnvironmentPeerDto()
     {
@@ -119,13 +121,18 @@ public class EnvironmentPeerDto
         this.ownerId = ownerId;
     }
 
-    public Long getSsUserId() {
+
+    public Long getSsUserId()
+    {
         return ssUserId;
     }
 
-    public void setSsUserId(Long ssUserId) {
+
+    public void setSsUserId( Long ssUserId )
+    {
         this.ssUserId = ssUserId;
     }
+
 
     public Set<String> getP2pSubnets()
     {
@@ -344,4 +351,14 @@ public class EnvironmentPeerDto
     }
 
 
+    public Set<EnvironmentNodeDto> getOperationNodes()
+    {
+        return operationNodes;
+    }
+
+
+    public void setOperationNodes( final Set<EnvironmentNodeDto> operationNodes )
+    {
+        this.operationNodes = operationNodes;
+    }
 }

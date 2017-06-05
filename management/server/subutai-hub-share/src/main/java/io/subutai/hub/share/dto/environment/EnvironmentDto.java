@@ -125,6 +125,23 @@ public class EnvironmentDto
     }
 
 
+    public EnvironmentNodeDto findNode( String nodeId )
+    {
+        for ( EnvironmentNodesDto nodesDto : this.getNodes() )
+        {
+            for ( EnvironmentNodeDto node : nodesDto.getNodes() )
+            {
+                if ( node.getContainerId().equals( nodeId ) )
+                {
+                    return node;
+                }
+            }
+        }
+
+        return null;
+    }
+
+
     public List<EnvironmentNodesDto> getNodes()
     {
         return nodes;
