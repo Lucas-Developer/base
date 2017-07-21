@@ -1,3 +1,10 @@
+
+
+<div class="b-workspace__content b-workspace__content_cloud-env">
+  <div class="b-workspace__header">
+    <h1 class="b-title"><span class="b-title_breadcrumbs">Edit environment in advanced mode</span></h1>
+  </div>
+
 <div class="b-cloud" ng-controller="AdvancedEnvironmentCtrl as advEnvCtrl" ondragover="return dragOver(event)" ng-init="advEnvCtrl.loadPrivateTemplates()">
   <div class="b-cloud__tools">
     <div class="b-cloud-tools">
@@ -217,7 +224,7 @@
                             ng-init="templateSettings.quotaSize = 'SMALL'"
                             ng-model="templateSettings.quotaSize">
                       <option
-                          ng-repeat="type in environmentViewCtrl.containersType"
+                          ng-repeat="type in advEnvCtrl.containersType"
                           value="{{ type }}">
                         {{ type }}
                       </option>
@@ -233,7 +240,7 @@
             <div class="b-template-settings__coll" ng-if="templateSettings.quotaSize !== 'CUSTOM'">
               <p class="b-template-settings__text">
                 {{ templateSettings.quotaSize }}: <br>
-                <span ng-repeat="(key, value) in environmentViewCtrl.containersTypeInfo[templateSettings.quotaSize]">
+                <span ng-repeat="(key, value) in advEnvCtrl.containersTypeInfo[templateSettings.quotaSize]">
 							{{ key }}: {{ value }}<br>
 						</span>
               </p>
@@ -285,7 +292,7 @@
           </button>
         </div>
       </div>
-      <div class="b-cloud-space__table">
+      <!--<div class="b-cloud-space__table">
         <table id="envTable" datatable="ng"
                ng-init="environmentViewCtrl.initDataTable()"
                dt-options="environmentViewCtrl.dtOptionsInstallTable"
@@ -362,8 +369,9 @@
           </tr>
           </tbody>
         </table>
-      </div>
+      </div>-->
     </div>
   </div>
 </div>
 
+</div>

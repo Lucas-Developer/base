@@ -3,7 +3,7 @@
 angular.module('subutai.environment.adv-controller', [])
     .controller('AdvancedEnvironmentCtrl', AdvancedEnvironmentCtrl);
 
-AdvancedEnvironmentCtrl.$inject = ['$scope', '$rootScope', 'environmentService', 'trackerSrv', 'SweetAlert', 'ngDialog', 'identitySrv'];
+AdvancedEnvironmentCtrl.$inject = ['$scope', '$rootScope', '$stateParams', '$location', 'environmentService', 'trackerSrv', 'SweetAlert', 'ngDialog', 'identitySrv'];
 
 var graph = new joint.dia.Graph;
 var paper;
@@ -17,7 +17,7 @@ var PEER_SPACE = 30;
 var RH_WIDTH = 100;
 var RH_SPACE = 10;
 
-function AdvancedEnvironmentCtrl($scope, $rootScope, environmentService, trackerSrv, SweetAlert, ngDialog, identitySrv) {
+function AdvancedEnvironmentCtrl($scope, $rootScope, $stateParams, $location, environmentService, trackerSrv, SweetAlert, ngDialog, identitySrv) {
 
     var vm = this;
 
@@ -75,6 +75,10 @@ function AdvancedEnvironmentCtrl($scope, $rootScope, environmentService, tracker
     vm.setTemplatesByPlugin = setTemplatesByPlugin;
     vm.loadPrivateTemplates = loadPrivateTemplates;
 
+    function changeView(view) {
+        $location.path(view)
+    }
+
     function loadPrivateTemplates() {
         environmentService.getPrivateTemplates()
             .then(function (data) {
@@ -97,16 +101,16 @@ function AdvancedEnvironmentCtrl($scope, $rootScope, environmentService, tracker
         loadPrivateTemplates();
     });
 
-    function addUniqueTemplates(filteredTemplates, groupedTemplates){
-        for( var i in groupedTemplates){
+    function addUniqueTemplates(filteredTemplates, groupedTemplates) {
+        for (var i in groupedTemplates) {
             var found = false;
-            for( var j in filteredTemplates){
-                if( groupedTemplates[i].id == filteredTemplates[j].id){
+            for (var j in filteredTemplates) {
+                if (groupedTemplates[i].id == filteredTemplates[j].id) {
                     found = true;
                     break;
                 }
             }
-            if(!found){
+            if (!found) {
                 filteredTemplates.push(groupedTemplates[i]);
             }
         }
@@ -124,7 +128,7 @@ function AdvancedEnvironmentCtrl($scope, $rootScope, environmentService, tracker
 
         vm.templatesList = templatesLst;
 
-        if(callback) callback();
+        if (callback) callback();
     }
 
     function getPeers() {
@@ -704,7 +708,7 @@ function AdvancedEnvironmentCtrl($scope, $rootScope, environmentService, tracker
             joint.dia.CellView.prototype.pointerclick.apply(this, arguments);
         },
         pointermove: function (evt, x, y) {
-            if(this.model.get('edited') == true) {
+            if (this.model.get('edited') == true) {
                 // disable moving for existing environment's containers
                 return false;
             } else {
@@ -715,10 +719,10 @@ function AdvancedEnvironmentCtrl($scope, $rootScope, environmentService, tracker
         pointerup: function (evt, x, y) {
             joint.dia.ElementView.prototype.pointerup.apply(this, arguments);
 
-            if ( this.isMovingContainer == true ) {
+            if (this.isMovingContainer == true) {
                 var models = graph.findModelsFromPoint({x: evt.offsetX, y: evt.offsetY});
 
-                if ( models != undefined && models.length > 0 ) {
+                if (models != undefined && models.length > 0) {
                     this.model.set('parentHostId', models[0].get('hostId'));
                     this.model.set('parentPeerId', models[0].get('peerId'));
                     this.model.get('rh')['model'] = models[0].id;
@@ -928,6 +932,7 @@ function AdvancedEnvironmentCtrl($scope, $rootScope, environmentService, tracker
     }
 
     vm.buildStep = 'confirm';
+
     function buildEnvironmentByJoint() {
 
         vm.buildCompleted = false;
@@ -965,6 +970,7 @@ function AdvancedEnvironmentCtrl($scope, $rootScope, environmentService, tracker
                     resetPlugin();
                 }
                 vm.buildCompleted = false;
+                changeView('environments')
             }
         });
     }
@@ -1015,6 +1021,7 @@ function AdvancedEnvironmentCtrl($scope, $rootScope, environmentService, tracker
 
     vm.plugins = [];
     vm.filteredPlugins = {};
+
     function getPlugins() {
         environmentService.getInstalledPlugins().success(function (data) {
             vm.plugins = data;
@@ -1149,11 +1156,11 @@ function AdvancedEnvironmentCtrl($scope, $rootScope, environmentService, tracker
                     var container2Build = {
 
                         "quota": isCustom ? {
-                                "containerSize": currentElement.get('quotaSize'),
-                                "cpuQuota": currentElement.get("cpuQuota"),
-                                "ramQuota": currentElement.get("ramQuota") + 'MiB',
-                                "diskQuota": currentElement.get("diskQuota") + 'GiB',
-                            } : {"containerSize": currentElement.get('quotaSize')},
+                            "containerSize": currentElement.get('quotaSize'),
+                            "cpuQuota": currentElement.get("cpuQuota"),
+                            "ramQuota": currentElement.get("ramQuota") + 'MiB',
+                            "diskQuota": currentElement.get("diskQuota") + 'GiB',
+                        } : {"containerSize": currentElement.get('quotaSize')},
 
                         "templateName": currentElement.get('templateName'),
                         "templateId": currentElement.get('templateId'),
@@ -1228,7 +1235,7 @@ function AdvancedEnvironmentCtrl($scope, $rootScope, environmentService, tracker
             currentTemplate.set('diskQuota', templateSettings.diskQuota);
         }
 
-        currentTemplate.attr('title/text', templateSettings.containerName + ' (' + currentTemplate.get('templateName') +  ') ' + templateSettings.quotaSize);
+        currentTemplate.attr('title/text', templateSettings.containerName + ' (' + currentTemplate.get('templateName') + ') ' + templateSettings.quotaSize);
         currentTemplate.attr('rect.b-magnet/fill', vm.colors[templateSettings.quotaSize]);
         currentTemplate.set('containerName', templateSettings.containerName);
 
@@ -1260,6 +1267,105 @@ function AdvancedEnvironmentCtrl($scope, $rootScope, environmentService, tracker
                 }
             }
         }
+    }
+
+    identitySrv.getCurrentUser().success(function (data) {
+        vm.currentUser = data;
+    });
+
+    environmentService.getContainersType()
+        .success(function (data) {
+            vm.containersType = data;
+        })
+        .error(function (data) {
+            VARS_MODAL_ERROR(SweetAlert, data);
+        });
+
+    environmentService.getContainersTypesInfo()
+        .success(function (data) {
+            vm.containersTypeInfo = [];
+
+            for (var i = 0; i < data.length; i++) {
+                var type = data[i].key.split(/\.(.+)?/)[0];
+                var property = data[i].key.split(/\.(.+)?/)[1];
+
+                if (vm.containersTypeInfo[type] === undefined) {
+                    vm.containersTypeInfo[type] = {};
+                }
+
+                vm.containersTypeInfo[type][property] = data[i].value.replace(/iB/ig, "B");
+            }
+        });
+
+    loadEnvironment($stateParams.environmentId);
+
+    function loadEnvironment(environmentId) {
+        environmentService.getEnvironments().success(function (data) {
+            var environmentsList = [];
+            for (var i = 0; i < data.length; ++i) {
+                data[i].containersByQuota = getContainersSortedByQuota(data[i].containers);
+                environmentsList.push(data[i]);
+            }
+            vm.currentEnvironment = findEnvironment(environmentsList, environmentId)
+            editEnvironment(vm.currentEnvironment)
+        }).error(function (error) {
+            console.log(error);
+        });
+    }
+
+    function findEnvironment(environments, environmentId) {
+        var result = null;
+        for (var i = 0; i < environments.length; i++) {
+            if (environments[i].id === environmentId) {
+                result = environments[i];
+                break;
+            }
+        }
+        return result;
+    }
+
+    function getContainersSortedByQuota(containers) {
+
+        var sortedContainers = containers.length > 0 ? {} : null;
+
+        for (var index = 0; index < containers.length; index++) {
+
+            var container = containers[index];
+            var remoteProxyContainer = !container.local && container.dataSource == "hub";
+
+            // We don't show on UI containers created by Hub, located on other peers.
+            // See details: io.subutai.core.environment.impl.adapter.EnvironmentAdapter.
+            if (remoteProxyContainer) {
+                continue;
+            }
+
+            var quotaSize = containers[index].type;
+            var templateName = containers[index].templateName;
+
+            if (!sortedContainers[quotaSize]) {
+                sortedContainers[quotaSize] = {};
+                sortedContainers[quotaSize].quantity = 1;
+                sortedContainers[quotaSize].containers = {};
+                sortedContainers[quotaSize].containers[templateName] = 1;
+            } else {
+                if (!sortedContainers[quotaSize].containers[templateName]) {
+                    sortedContainers[quotaSize].quantity += 1;
+                    sortedContainers[quotaSize].containers[templateName] = 1;
+                } else {
+                    sortedContainers[quotaSize].quantity += 1;
+                    sortedContainers[quotaSize].containers[templateName] += 1;
+                }
+            }
+        }
+
+        for (var item in sortedContainers) {
+            sortedContainers[item].tooltip = "";
+            for (var container in sortedContainers[item].containers) {
+                sortedContainers[item].tooltip += container + ":&nbsp;" + sortedContainers[item].containers[container] + "<br/>";
+            }
+            sortedContainers[item].tooltip += "Quota: " + item;
+        }
+        return sortedContainers;
     }
 
 }
@@ -1412,6 +1518,7 @@ function endtDrag(event) {
 }
 
 var containerCounter = 1;
+
 function drop(event) {
 
     var template = event.dataTransfer.getData("template");

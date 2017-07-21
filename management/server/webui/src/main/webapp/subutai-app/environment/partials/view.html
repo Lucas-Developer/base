@@ -1,30 +1,112 @@
 <div ng-controller="EnvironmentViewCtrl as environmentViewCtrl" class="b-workspace__environments">
 
-	<div class="b-workspace__header b-workspace__header_cloud-env">
+  <div class="b-workspace__header b-workspace__header_cloud-env">
+    <h1 class="b-title"><span class="b-title_breadcrumbs">Environment list</span></h1>
+    <!--
+        <div class="b-switcher">
+          <div class="b-toggle b-toggle_cloud">
+            <input type="checkbox"
+                   class="b-check"
+                   ng-model="environmentMode"
+                   ng-change="environmentViewCtrl.changeMode(environmentMode)">
 
-		<div class="b-switcher">
-			<div class="b-toggle b-toggle_cloud">
-				<input type="checkbox" 
-					class="b-check" 
-					ng-model="environmentMode" 
-					ng-change="environmentViewCtrl.changeMode(environmentMode)">
+            <div class="b-toggle-bg"></div>
+            <b class="b-b b-switch"></b>
+          </div>
+        </div>
+    -->
 
-				<div class="b-toggle-bg"></div>
-				<b class="b-b b-switch"></b>
-			</div>
-		</div>
+  </div>
 
-	</div>
+  <div class="b-workspace__content b-workspace__content_cloud-env">
 
-	<div class="b-workspace__content b-workspace__content_cloud-env">
-		<div
-				ng-include="environmentViewCtrl.activeMode == 'simple' ? 'subutai-app/environment/partials/simple.html' : null">
-		</div>
-
-		<div
-				ng-include="environmentViewCtrl.activeMode == 'advanced' ? 'subutai-app/environment/partials/advanced.html' : null">
-		</div>
-
-	</div>
+    <div class="b-cloud-space__table">
+      <table id="envTable" datatable="ng"
+             ng-init="environmentViewCtrl.initDataTable()"
+             dt-options="environmentViewCtrl.dtOptionsInstallTable"
+             dt-column-defs="environmentViewCtrl.dtColumnDefsInstallTable"
+             dt-instance="environmentViewCtrl.dtInstance"
+             class="row-border hover subt_table-containers-table">
+        <thead>
+        <tr>
+          <th></th>
+          <th>Name</th>
+          <th>SSH Key</th>
+          <th>Domains</th>
+          <th>Containers</th>
+          <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-if="environmentViewCtrl.environments.length > 0"
+            ng-repeat="(key, environment) in environmentViewCtrl.environments">
+          <td>
+            <div class="b-status-icon b-status-icon_{{ environment.status }}"
+                 tooltips
+                 tooltip-template="{{ environment.status }}"
+                 tooltip-side="right">
+            </div>
+          </td>
+          <td class="b-word-break-all" data-order="{{ environment.name }}">
+            <a tooltips
+               ui-sref="containers({ environmentId: environment.id })"
+               tooltip-template='<span class="b-nowrap">ID: {{ environment.id }}. Source: {{ environment.dataSource }}</span>'
+               tooltip-side="right"
+               env-data-source="{{ environment.dataSource }}"
+            >
+              {{ environment.name }}
+            </a>
+          </td>
+          <td><a href ng-click="environmentViewCtrl.showSSHKeyForm(environment.id)">Add</a>/
+            <a href ng-click="environmentViewCtrl.showSSHKeysPopup(environment.id)">Remove</a></td>
+          <td>
+            <button class="b-btn b-btn_grey" ng-click="environmentViewCtrl.showDomainForm(environment.id)">Configure
+            </button>
+          </td>
+          <td>
+										<span class="g-circle-label g-circle-label_blue g-margin-left-quarter"
+                          ng-repeat="(key, value) in environment.containersByQuota"
+                          ng-style="{'background-color' : environmentViewCtrl.getQuotaColor(key)}"
+                          tooltips
+                          tooltip-template="{{value.tooltip}}">
+											{{value.quantity}}
+										</span>
+          </td>
+          <td class="b-main-table__controls">
+            <div class="b-main-table__controls">
+              <a href
+                 class="b-icon b-icon_share"
+                 tooltips
+                 tooltip-template='Share'
+                 ng-click="environmentViewCtrl.shareEnvironmentWindow (environment)"
+                 ng-show="environment.status === 'HEALTHY'">
+              </a>
+              <a href
+                 class="b-icon b-icon_edit"
+                 tooltips
+                 tooltip-template='Edit'
+                 ng-click="environmentViewCtrl.changeView('/environment/simple', environment)"
+                 style="visibility: visible">
+              </a>
+              <a href
+                 class="b-icon b-icon_edit"
+                 tooltips
+                 tooltip-template='Edit in advanced mode'
+                 ng-click="environmentViewCtrl.changeView('/environment/advanced', environment)"
+                 style="visibility: visible">
+              </a>
+              <a href
+                 class="b-icon b-icon_remove"
+                 tooltips
+                 tooltip-template='Destroy'
+                 ng-click="environmentViewCtrl.destroyEnvironment(environment.id, key)">
+              </a>
+            </div>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
 </div>
