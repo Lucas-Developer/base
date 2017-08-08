@@ -931,8 +931,8 @@ function EnvironmentSimpleViewCtrl($scope, $rootScope, $stateParams, $location, 
 
         var paper = new joint.dia.Paper({
             el: $('#js-environment-creation'),
-            width: '100%',
-            height: '100%',
+            width: '2000px',
+            height: '2000px',
             model: graph,
             gridSize: 1
         });
