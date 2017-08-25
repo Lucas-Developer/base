@@ -5,7 +5,7 @@
   <parent>
     <artifactId>identity-manager-parent</artifactId>
     <groupId>io.subutai</groupId>
-    <version>4.0.16-SNAPSHOT</version>
+    <version>5.0.1-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -34,6 +34,11 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>template-manager-api</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>environment-manager-api</artifactId>
     </dependency>
 
     <dependency>

@@ -1,0 +1,43 @@
+<div class="b-popup b-popup_min">
+	<div class="b-popup__header">
+		Add peer
+		<a href ng-click="closeThisDialog()">
+			<img src="assets/elements/buttons/b-icon-close.svg" class="b-icon g-right"/>
+		</a>
+	</div>
+	<form ng-submit="peerRegistrationCtrl.addPeer(newPeer)">								
+		<div class="b-popup__body">
+
+			<div class="popup-body-box">
+				<label class="b-popup-body-label">Enter IP</label>
+				<input type="text" 
+					id="subt_input__peer-ip" 
+					class="b-popup-body-input b-popup-body-input_box" 
+					ng-model="newPeer.ip" required>
+				<i ng-show="peerRegistrationCtrl.peerStatusIco == 'check'" class="g-right fa fa-check b-tags_green"></i>
+				<i ng-show="peerRegistrationCtrl.peerStatusIco == 'times'" class="g-right fa fa-times b-tags_red"></i>
+				<div class="clear"></div>
+			</div>
+
+			<div class="popup-body-box">
+				<label class="b-popup-body-label">Key phrase</label>
+				<input type="text" 
+					id="subt_input__peer-key-phrase" 
+					class="b-popup-body-input b-popup-body-input_box" 
+					ng-model="newPeer.keyphrase" required>
+				<div class="clear"></div>
+			</div>
+
+		</div>
+
+		<div class="b-popup__footer">
+			<button class="b-btn b-btn_green g-right" type="submit" id="subt_button__create-peer" style="margin-left: 5px">
+				Create
+			</button>
+			<a class="b-btn b-btn_green g-right" ng-click="peerRegistrationCtrl.checkResourceHost(newPeer)">
+				Check
+			</a>
+			<div class="clear"></div>
+		</div>
+	</form>
+</div>

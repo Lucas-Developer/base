@@ -4,30 +4,31 @@ angular.module('subutai.environment.controller', [])
     .controller('EnvironmentViewCtrl', EnvironmentViewCtrl)
     .directive('fileModel', fileModel)
     .directive('onErrorSrc', onErrorSrc)
-    .directive('onReadFile', onReadFile)
-    .filter('sshEmail', function () {
-        return function (input, modify) {
-            if (!modify)
-                return input;
-            var newVal = input.split(' ');
-            return newVal[newVal.length - 1];
-        }
-    })
-    .filter('isEmpty', [function () {
-        return function (object, editStatus) {
-            if (editStatus === true || angular.equals({}, object)) {
-                return true
-            } else {
-                return false;
-            }
-        }
-    }]).factory('DTLoadingTemplate', dtLoadingTemplate);
+	.directive('onReadFile', onReadFile)
+	.filter( 'sshEmail', function () {
+		return function( input, modify )
+		{
+			if( !modify )
+				return input;
+			var newVal = input.split(' ');
+			return newVal[newVal.length - 1];
+		}
+	})
+	.filter('isEmpty', [function() {
+		return function(object, editStatus) {
+			if(editStatus === true || angular.equals({}, object)) {
+				return true
+			} else {
+				return false;
+			}
+		}
+	}]);//.factory('DTLoadingTemplate', dtLoadingTemplate);
 
-function dtLoadingTemplate() {
-    return {
-        html: ''
-    };
-}
+//	function dtLoadingTemplate() {
+//        return {
+//            html: ''
+//        };
+//    }
 
 EnvironmentViewCtrl.$inject = ['$scope', '$rootScope', 'environmentService', 'trackerSrv', 'identitySrv', 'SweetAlert', '$resource', '$compile', 'ngDialog', '$timeout', '$sce', '$stateParams', 'DTOptionsBuilder', 'DTColumnDefBuilder', '$state', '$location'];
 fileModel.$inject = ['$parse'];
@@ -566,14 +567,14 @@ function EnvironmentViewCtrl($scope, $rootScope, environmentService, trackerSrv,
         LOADING_SCREEN();
         environmentService.removeSshKey(vm.sshKeyForEnvironment, sshKey).success(function (data) {
 
-            vm.sshKeysList.splice(index, 1);
-            LOADING_SCREEN('none');
-        }).error(function (error) {
-            SweetAlert.swal("Error", "Error: " + error, "error");
-            ngDialog.closeAll();
-            LOADING_SCREEN('none');
-        });
-    }
+			vm.sshKeysList.splice(index, 1);
+			LOADING_SCREEN('none');
+		}).error( function(data) {
+			SweetAlert.swal("Error", "Error: " + data.ERROR, "error");
+			ngDialog.closeAll();
+			LOADING_SCREEN('none');
+		});
+	}
 
     function sshKeyFormat(sshKey) {
         var splitedSSH = sshKey.split('==');

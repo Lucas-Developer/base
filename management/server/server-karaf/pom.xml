@@ -5,7 +5,7 @@
   <parent>
     <groupId>io.subutai</groupId>
     <artifactId>mgmt-server-parent</artifactId>
-    <version>4.0.16-SNAPSHOT</version>
+    <version>5.0.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>subutai</artifactId>
@@ -316,7 +316,7 @@
                 <configuration>
                   <packageName>management-${git.branch}</packageName>
                   <packageVersion>${project.version}</packageVersion>
-                  <maintainerName>Subutai Social</maintainerName>
+                  <maintainerName>Subutai</maintainerName>
                   <packageDependencies>
                     <packageDependencies>openjdk-8-jre-headless</packageDependencies>
                     <packageDependencies>curl</packageDependencies>

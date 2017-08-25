@@ -14,6 +14,7 @@ import io.subutai.common.environment.EnvironmentNotFoundException;
 import io.subutai.common.environment.HostAddresses;
 import io.subutai.common.peer.ContainerHost;
 import io.subutai.common.peer.EnvironmentId;
+import io.subutai.common.peer.HostNotFoundException;
 import io.subutai.common.peer.Peer;
 import io.subutai.common.security.SshKey;
 import io.subutai.common.security.SshKeys;
@@ -120,11 +121,13 @@ public class ConfigureContainerStateHandler extends StateHandler
             //add new keys
             Set<String> newKeys = new HashSet<>();
 
-            newKeys.addAll( hubSshKeys );
+            if ( isSsEnv )
+            {
+                //for SS env no need to duplicate keys, it will add to Environment entity
+                hubSshKeys.removeAll( peerSshKeys );
+            }
 
-            // Fix for https://github.com/optdyn/hub/issues/2671: "newly added containers do not have the previously
-            // installed env SSH keys installed".
-            // newKeys.removeAll( peerSshKeys );
+            newKeys.addAll( hubSshKeys );
 
             if ( newKeys.isEmpty() )
             {
@@ -304,6 +307,11 @@ public class ConfigureContainerStateHandler extends StateHandler
                         ctx.localPeer.setContainerHostname( ch.getContainerId(), nodeDto.getHostName() );
                     }
                 }
+                catch ( HostNotFoundException ignore )
+                {
+                    //this is a remote container
+                    //no-op
+                }
                 catch ( Exception e )
                 {
                     log.error( "Error configuring hostnames: {}", e.getMessage() );
@@ -324,6 +332,11 @@ public class ConfigureContainerStateHandler extends StateHandler
                     ContainerHost ch = ctx.localPeer.getContainerHostById( nodeDto.getContainerId() );
 
                     ctx.localPeer.setQuota( ch.getContainerId(), nodeDto.getContainerQuota() );
+                }
+                catch ( HostNotFoundException ignore )
+                {
+                    //this is a remote container
+                    //no-op
                 }
                 catch ( Exception e )
                 {

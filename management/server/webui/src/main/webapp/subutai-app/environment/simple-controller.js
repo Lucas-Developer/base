@@ -60,7 +60,7 @@ function EnvironmentSimpleViewCtrl($scope, $rootScope, $stateParams, $location, 
     vm.loadPrivateTemplates = loadPrivateTemplates;
     vm.findEmptyCubePostion = findEmptyCubePostion;
     vm.changeView = changeView;
-    
+
     function changeView(view) {
         $location.path(view)
     }
@@ -259,40 +259,40 @@ function EnvironmentSimpleViewCtrl($scope, $rootScope, $stateParams, $location, 
                         for (var j = 0; j < data[i].templatesDownloadProgress.length; j++) {
                             var p = data[i].templatesDownloadProgress[j];
 
-                            for (var tpl in p.templatesDownloadProgress) {
-                                output += [
-                                    '<tr>',
-                                    '<td>',
-                                    'RH ' + shortenIdName(p.rhId, 3),
-                                    '</td>',
-                                    '<td>',
-                                    '<div class="b-progress-cloud b-progress-cloud_white b-progress-cloud_big">',
-                                    '<div class="b-progress-cloud-fill" style="width: ' + p.templatesDownloadProgress[tpl] + '%;"></div>',
-                                    '<span class="b-progress-cloud-text">' + tpl + '</span>',
-                                    '</div>',
-                                    '</td>',
-                                    '</tr>'
-                                ].join('');
-                                if (p.templatesDownloadProgress[tpl] != 100) {
-                                    checker = true;
-                                }
-                            }
-                        }
-                    }
-                    output += '</table>';
+							for (var tpl in p.templatesDownloadProgress) {
+								output += [
+									'<tr>',
+										'<td>',
+											'RH ' + shortenIdName(p.rhId, 3),
+										'</td>',
+										'<td>',
+											'<div class="b-progress-cloud b-progress-cloud_white b-progress-cloud_big">',
+												'<div class="b-progress-cloud-fill" style="width: ' + p.templatesDownloadProgress[tpl] + '%;"></div>',
+												'<span class="b-progress-cloud-text">' + tpl + '</span>',
+											'</div>',
+										'</td>',
+									'</tr>'
+								].join('');
+								if( p.templatesDownloadProgress[tpl] != 100 ) {
+									checker = true;
+								}
+							}
+						}
+					}
+					output += '</table>';
 
-                    if (checker == true) {
-                        $('.js-download-progress').html(output);
-                    } else {
-                        $('.js-download-progress').html('');
-                    }
-                } else {
-                    $('.js-download-progress').html('');
-                }
-            })
-            .error(function (data) {
-                $('.js-download-progress').html('');
-            });
+					if( checker == true ) {
+						$('.js-download-progress').html(output);
+					} else {
+						$('.js-download-progress').html('');
+					}
+				} else {
+					$('.js-download-progress').html('');
+				}
+			})
+			.error(function (data) {
+				$('.js-download-progress').html('');
+			});
 
         trackerSrv.getOperation('ENVIRONMENT MANAGER', id)
             .success(function (data) {
@@ -345,40 +345,76 @@ function EnvironmentSimpleViewCtrl($scope, $rootScope, $stateParams, $location, 
                         getLogById(id, false, logs, envId);
                     }, 2000);
 
-                    return result;
-                } else {
-                    if (data.state == 'FAILED') {
-                        checkLastLog(false);
-                        $('.js-download-progress').html('');
-                    } else {
-                        if (prevLogs) {
-                            var logs = data.log.split(/(?:\r\n|\r|\n)/g);
-                            if (logs.length > prevLogs.length) {
-                                checkLastLog(true, logs[logs.length - 1]);
-                            }
-                        } else {
-                            checkLastLog(true);
-                        }
-                        var currentLog = {
-                            "time": moment().format('HH:mm:ss'),
-                            "status": 'success',
-                            "classes": ['fa-check', 'g-text-green'],
-                            "text": 'Your environment has been built successfully'
-                        };
-                        vm.logMessages.push(currentLog);
-                        vm.buildCompleted = true;
-                        vm.isEditing = false;
-                    }
+					return result;
+				} else {
+					if (data.state == 'FAILED') {
 
-                    $('.js-download-progress').html('');
-                    $rootScope.notificationsUpdate = 'getLogById';
-                    $scope.$emit('reloadEnvironmentsList');
-                    clearWorkspace();
-                }
-            }).error(function (error) {
-            console.log(error);
-        });
-    }
+                        checkLastLog(false);
+
+                        var logs = data.log.split(/(?:\r\n|\r|\n)/g);
+                        var result = [];
+                        var i = 0;
+                        if (prevLogs) {
+                            i = prevLogs.length;
+                            if (logs.length > prevLogs.length) {
+                                checkLastLog(true, logs[i - 1]);
+                            }
+                        }
+
+                        var logs = data.log.split(/(?:\r\n|\r|\n)/g);
+					    for (i; i < logs.length; i++) {
+
+                            var logCheck = logs[i].replace(/ /g, '');
+
+                            var logObj = JSON.parse(logs[i].substring(0, logs[i].length - 1));
+                            var logTime = moment(logObj.date).format('HH:mm:ss');
+
+							var logStatus = 'success';
+							var logClasses = ['fa-check', 'g-text-green'];
+
+							if (i + 1 == logs.length) {
+								logStatus = 'failed';
+								logClasses = ['fa-times', 'g-text-red'];
+							}
+
+                            var currentLog = {
+                                "time": logTime,
+                                "status": logStatus,
+                                "classes": logClasses,
+                                "text": logObj.log
+                            };
+                            vm.logMessages.push(currentLog);
+                        }
+
+					} else {
+						if (prevLogs) {
+							var logs = data.log.split(/(?:\r\n|\r|\n)/g);
+							if (logs.length > prevLogs.length) {
+								checkLastLog(true, logs[logs.length - 1]);
+							}
+						} else {
+							checkLastLog(true);
+						}
+						var currentLog = {
+							"time": moment().format('HH:mm:ss'),
+							"status": 'success',
+							"classes": ['fa-check', 'g-text-green'],
+							"text": 'Operation has been performed successfully'
+						};
+						vm.logMessages.push(currentLog);
+						vm.buildCompleted = true;
+						vm.isEditing = false;
+					}
+
+					$('.js-download-progress').html('');
+					$rootScope.notificationsUpdate = 'getLogById';
+					$scope.$emit('reloadEnvironmentsList');
+					clearWorkspace();
+				}
+			}).error(function (error) {
+				console.log(error);
+			});
+	}
 
     vm.logMessages = [];
 
@@ -573,181 +609,180 @@ function EnvironmentSimpleViewCtrl($scope, $rootScope, $stateParams, $location, 
     //simple creation templates
     joint.shapes.tm.toolElement = joint.shapes.basic.Generic.extend({
 
-        toolMarkup: [
-            '<g class="element-tools element-tools_big">',
-            '<g class="element-tool-remove">',
-            '<circle fill="#F8FBFD" r="8" stroke="#dcdcdc"/>',
-            '<polygon transform="scale(1.2) translate(-5, -5)" fill="#292F6C" points="8.4,2.4 7.6,1.6 5,4.3 2.4,1.6 1.6,2.4 4.3,5 1.6,7.6 2.4,8.4 5,5.7 7.6,8.4 8.4,7.6 5.7,5 "/>',
-            '<title>Remove</title>',
-            '</g>',
-            '</g>',
-            '<g class="element-tools element-tools_copy">',
-            '<g class="element-tool-copy">',
-            '<circle fill="#F8FBFD" r="8" stroke="#dcdcdc"/>',
-            '<g class="copy-icon element-tool-copy">',
-            '<path class="element-tool-copy" d="M7.1,9.5H0.7c-0.1,0-0.2-0.1-0.2-0.2V2.8c0-0.1,0.1-0.2,0.2-0.2h6.5c0.1,0,0.2,0.1,0.2,0.2v6.5C7.3,9.4,7.2,9.5,7.1,9.5z M0.8,9.1H7V3H0.8V9.1z"/>',
-            '<path class="element-tool-copy" d="M9.3,7.3H8.8c-0.1,0-0.2-0.1-0.2-0.2S8.7,7,8.8,7h0.4V0.9H3v0.3c0,0.1-0.1,0.2-0.2,0.2c-0.1,0-0.2-0.1-0.2-0.2V0.7 c0-0.1,0.1-0.2,0.2-0.2h6.5c0.1,0,0.2,0.1,0.2,0.2v6.5C9.5,7.3,9.4,7.3,9.3,7.3z"/>',
-            '</g>',
-            '<title>Copy</title>',
-            '</g>',
-            '</g>',
-            '<g class="element-call-menu">',
-            '<rect class="b-magnet"/>',
-            '<g class="b-container-plus-icon">',
-            '<line fill="none" stroke="#FFFFFF" stroke-miterlimit="10" x1="0" y1="4.5" x2="9" y2="4.5"/>',
-            '<line fill="none" stroke="#FFFFFF" stroke-miterlimit="10" x1="4.5" y1="0" x2="4.5" y2="9"/>',
-            '</g>',
-            '</g>'
-        ].join(''),
+		toolMarkup: [
+			'<g class="element-tools element-tools_big">',
+				'<g class="element-tool-remove">',
+					'<circle fill="#F8FBFD" r="8" stroke="#dcdcdc"/>',
+					'<polygon transform="scale(1.2) translate(-5, -5)" fill="#292F6C" points="8.4,2.4 7.6,1.6 5,4.3 2.4,1.6 1.6,2.4 4.3,5 1.6,7.6 2.4,8.4 5,5.7 7.6,8.4 8.4,7.6 5.7,5 "/>',
+					'<title>Remove</title>',
+				'</g>',
+			'</g>',
+			'<g class="element-tools element-tools_copy">',
+				'<g class="element-tool-copy">',
+					'<circle fill="#F8FBFD" r="8" stroke="#dcdcdc"/>',
+					'<g class="copy-icon element-tool-copy">',
+						'<path class="element-tool-copy" d="M7.1,9.5H0.7c-0.1,0-0.2-0.1-0.2-0.2V2.8c0-0.1,0.1-0.2,0.2-0.2h6.5c0.1,0,0.2,0.1,0.2,0.2v6.5C7.3,9.4,7.2,9.5,7.1,9.5z M0.8,9.1H7V3H0.8V9.1z"/>',
+						'<path class="element-tool-copy" d="M9.3,7.3H8.8c-0.1,0-0.2-0.1-0.2-0.2S8.7,7,8.8,7h0.4V0.9H3v0.3c0,0.1-0.1,0.2-0.2,0.2c-0.1,0-0.2-0.1-0.2-0.2V0.7 c0-0.1,0.1-0.2,0.2-0.2h6.5c0.1,0,0.2,0.1,0.2,0.2v6.5C9.5,7.3,9.4,7.3,9.3,7.3z"/>',
+					'</g>',
+					'<title>Copy</title>',
+				'</g>',
+			'</g>',
+			'<g class="element-call-menu">',
+				'<rect class="b-magnet"/>',
+				'<g class="b-container-plus-icon">',
+					'<line fill="none" stroke="#FFFFFF" stroke-miterlimit="10" x1="0" y1="4.5" x2="9" y2="4.5"/>',
+					'<line fill="none" stroke="#FFFFFF" stroke-miterlimit="10" x1="4.5" y1="0" x2="4.5" y2="9"/>',
+				'</g>',
+			'</g>'
+			].join(''),
 
-        defaults: joint.util.deepSupplement({
-            attrs: {
-                text: {
-                    'font-weight': 400,
-                    'font-size': 'small',
-                    fill: 'black',
-                    'text-anchor': 'middle',
-                    'ref-x': .5,
-                    'ref-y': .5,
-                    'y-alignment': 'middle'
-                },
-                'rect.b-magnet': {
-                    fill: '#04346E',
-                    width: 15,
-                    height: 15,
-                    rx: 50,
-                    ry: 50,
-                    transform: 'translate(26,51)'
-                },
-                'g.b-container-plus-icon': {'ref-x': 29, 'ref-y': 54.5, ref: 'rect', transform: 'scale(1)'}
-            },
-        }, joint.shapes.basic.Generic.prototype.defaults)
+		defaults: joint.util.deepSupplement({
+			attrs: {
+				text: {
+					'font-weight': 400,
+					'font-size': 'small',
+					fill: 'black',
+						'text-anchor': 'middle',
+						'ref-x': .5,
+							'ref-y': .5,
+							'y-alignment': 'middle'
+				},
+				'rect.b-magnet': {
+					fill: '#04346E',
+					width: 15,
+					height: 15,
+					rx: 50,
+					ry: 50,
+					transform: 'translate(26,51)'
+				},
+					'g.b-container-plus-icon': {'ref-x': 29, 'ref-y': 54.5, ref: 'rect', transform: 'scale(1)'}
+			},
+		}, joint.shapes.basic.Generic.prototype.defaults)
 
-    });
+	});
 
-    joint.shapes.tm.devElement = joint.shapes.tm.toolElement.extend({
+	joint.shapes.tm.devElement = joint.shapes.tm.toolElement.extend({
 
-        markup: [
-            '<g class="rotatable">',
-            '<g class="scalable">',
-            '<rect class="b-border"/>',
-            '</g>',
-            '<title/>',
-            '<image/>',
-            '</g>'
-        ].join(''),
+		markup: [
+			'<g class="rotatable">',
+				'<g class="scalable">',
+					'<rect class="b-border"/>',
+				'</g>',
+				'<title/>',
+				'<image/>',
+			'</g>'
+		].join(''),
 
-        defaults: joint.util.deepSupplement({
-            type: 'tm.devElement',
-            size: {width: 70, height: 70},
-            attrs: {
-                title: {text: 'Static Tooltip'},
-                'rect.b-border': {
-                    fill: '#fff',
-                    stroke: '#dcdcdc',
-                    'stroke-width': 1,
-                    width: 70,
-                    height: 70,
-                    rx: 50,
-                    ry: 50
-                },
-                //'rect.b-magnet': {fill: '#04346E', width: 10, height: 10, rx: 50, ry: 50, magnet: true, transform:
-                // 'translate(30,53)'},
-                image: {'ref-x': 9, 'ref-y': 9, ref: 'rect', width: 50, height: 50},
-            }
-        }, joint.shapes.tm.toolElement.prototype.defaults)
-    });
+		defaults: joint.util.deepSupplement({
+			type: 'tm.devElement',
+			size: {width: 70, height: 70},
+			attrs: {
+				title: {text: 'Static Tooltip'},
+				'rect.b-border': {
+					fill: '#fff',
+					stroke: '#dcdcdc',
+					'stroke-width': 1,
+					width: 70,
+					height: 70,
+					rx: 50,
+					ry: 50
+				},
+				//'rect.b-magnet': {fill: '#04346E', width: 10, height: 10, rx: 50, ry: 50, magnet: true, transform: 'translate(30,53)'},
+				image: {'ref-x': 9, 'ref-y': 9, ref: 'rect', width: 50, height: 50},
+			}
+		}, joint.shapes.tm.toolElement.prototype.defaults)
+	});
 
-    //custom view
-    joint.shapes.tm.ToolElementView = joint.dia.ElementView.extend({
-        initialize: function () {
-            joint.dia.ElementView.prototype.initialize.apply(this, arguments);
-        },
-        render: function () {
-            joint.dia.ElementView.prototype.render.apply(this, arguments);
-            this.renderTools();
-            this.update();
-            return this;
-        },
-        renderTools: function () {
-            var toolMarkup = this.model.toolMarkup || this.model.get('toolMarkup');
-            if (toolMarkup) {
-                var nodes = V(toolMarkup);
-                V(this.el).append(nodes);
-            }
-            return this;
-        },
-        mouseover: function (evt, x, y) {
-        },
-        pointerclick: function (evt, x, y) {
-            this._dx = x;
-            this._dy = y;
-            this._action = '';
-            var className = evt.target.parentNode.getAttribute('class');
-            switch (className) {
-                case 'element-tool-remove':
-                    if (this.model.attributes.containerId) {
-                        vm.currentEnvironment.excludedContainers.push(this.model);
-                    } else {
-                        var object =
-                            vm.currentEnvironment.includedContainers ?
-                                getElementByField('id', this.model.id, vm.currentEnvironment.includedContainers) :
-                                null;
-                        object !== null ? vm.currentEnvironment.includedContainers.splice(object.index, 1) : null;
-                    }
-                    this.model.remove();
-                    delete vm.templateGrid[Math.floor(x / GRID_CELL_SIZE)][Math.floor(y / GRID_CELL_SIZE)];
+	//custom view
+	joint.shapes.tm.ToolElementView = joint.dia.ElementView.extend({
+		initialize: function () {
+			joint.dia.ElementView.prototype.initialize.apply(this, arguments);
+		},
+		render: function () {
+			joint.dia.ElementView.prototype.render.apply(this, arguments);
+			this.renderTools();
+			this.update();
+			return this;
+		},
+		renderTools: function () {
+			var toolMarkup = this.model.toolMarkup || this.model.get('toolMarkup');
+			if (toolMarkup) {
+				var nodes = V(toolMarkup);
+				V(this.el).append(nodes);
+			}
+			return this;
+		},
+		mouseover: function (evt, x, y) {
+		},
+		pointerclick: function (evt, x, y) {
+			this._dx = x;
+			this._dy = y;
+			this._action = '';
+			var className = evt.target.parentNode.getAttribute('class');
+			switch (className) {
+				case 'element-tool-remove':
+					if (this.model.attributes.containerId) {
+						vm.currentEnvironment.excludedContainers.push(this.model);
+					} else {
+						var object =
+							vm.currentEnvironment.includedContainers ?
+							getElementByField('id', this.model.id, vm.currentEnvironment.includedContainers) :
+							null;
+						object !== null ? vm.currentEnvironment.includedContainers.splice(object.index, 1) : null;
+					}
+					this.model.remove();
+					delete vm.templateGrid[Math.floor(x / GRID_CELL_SIZE)][Math.floor(y / GRID_CELL_SIZE)];
 
-                    filterPluginsList();
+					filterPluginsList();
 
-                    return;
-                    break;
-                case 'element-tool-copy':
-                    addContainer(
-                        this.model.attributes.templateName.toLowerCase(),
-                        false,
-                        this.model.attributes.quotaSize,
-                        getTemplateNameById(this.model.attributes.templateName, vm.templatesList),
-                        this.model.attributes.templateId
-                    );
+					return;
+					break;
+				case 'element-tool-copy':
+					addContainer(
+							this.model.attributes.templateName.toLowerCase(),
+							false,
+							this.model.attributes.quotaSize,
+							getTemplateNameById(this.model.attributes.templateName, vm.templatesList),
+							this.model.attributes.templateId
+							);
 
-                    return;
-                    break;
-                case 'element-call-menu':
-                case 'b-container-plus-icon':
-                    currentTemplate = this.model;
-                    $('#js-container-name').val(currentTemplate.get('containerName')).trigger('change');
-                    if (currentTemplate.get('edited') == true) {
-                        $('#js-container-name').prop('disabled', true);
-                    } else {
-                        $('#js-container-name').prop('disabled', false);
-                    }
-                    $('#js-container-size').val(currentTemplate.get('quotaSize')).trigger('change');
+					return;
+					break;
+				case 'element-call-menu':
+				case 'b-container-plus-icon':
+					currentTemplate = this.model;
+					$('#js-container-name').val(currentTemplate.get('containerName')).trigger('change');
+					if(currentTemplate.get('edited') == true) {
+						$('#js-container-name').prop('disabled', true);
+					} else {
+						$('#js-container-name').prop('disabled', false);
+					}
+					$('#js-container-size').val(currentTemplate.get('quotaSize')).trigger('change');
 
-                    if (currentTemplate.get('quotaSize') == 'CUSTOM') {
-                        $('#js-quotasize-custom-cpu').val(currentTemplate.get('cpuQuota')).trigger('change');
-                        $('#js-quotasize-custom-ram').val(currentTemplate.get('ramQuota')).trigger('change');
-                        $('#js-quotasize-custom-disk').val(currentTemplate.get('diskQuota')).trigger('change');
-                    }
+					if(currentTemplate.get('quotaSize') == 'CUSTOM'){
+					    $('#js-quotasize-custom-cpu').val(currentTemplate.get('cpuQuota')).trigger('change');
+					    $('#js-quotasize-custom-ram').val(currentTemplate.get('ramQuota')).trigger('change');
+					    $('#js-quotasize-custom-disk').val(currentTemplate.get('diskQuota')).trigger('change');
+					}
 
-                    containerSettingMenu.find('.header').html('Settings for <b>' + this.model.get('templateName') + '</b> container');
-                    var elementPos = this.model.get('position');
-                    containerSettingMenu.css({
-                        'left': (elementPos.x + 12) + 'px',
-                        'top': (elementPos.y + 73) + 'px',
-                        'display': 'block'
-                    });
-                    return;
-                    break;
-                case 'rotatable':
-                    return;
-                    break;
-                default:
-            }
-            joint.dia.CellView.prototype.pointerclick.apply(this, arguments);
-        }
-    });
-    joint.shapes.tm.devElementView = joint.shapes.tm.ToolElementView;
+					containerSettingMenu.find('.header').html('Settings for <b>' + this.model.get('templateName') + '</b> container');
+					var elementPos = this.model.get('position');
+					containerSettingMenu.css({
+						'left': (elementPos.x + 12) + 'px',
+						'top': (elementPos.y + 73) + 'px',
+						'display': 'block'
+					});
+					return;
+					break;
+				case 'rotatable':
+					return;
+					break;
+				default:
+			}
+			joint.dia.CellView.prototype.pointerclick.apply(this, arguments);
+		}
+	});
+	joint.shapes.tm.devElementView = joint.shapes.tm.ToolElementView;
 
     vm.plugins = [];
     vm.filteredPlugins = {};
@@ -917,7 +952,7 @@ function EnvironmentSimpleViewCtrl($scope, $rootScope, $stateParams, $location, 
         vm.cubeGrowth++;
         return {x: vm.cubeGrowth - 1, y: 0};
     }
-    
+
     function initJointJs() {
 
         setTimeout(function () {
@@ -1194,7 +1229,7 @@ function EnvironmentSimpleViewCtrl($scope, $rootScope, $stateParams, $location, 
                 vm.containersTypeInfo[type][property] = data[i].value.replace(/iB/ig, "B");
             }
         });
-    
+
     loadEnvironment($stateParams.environmentId);
 }
 

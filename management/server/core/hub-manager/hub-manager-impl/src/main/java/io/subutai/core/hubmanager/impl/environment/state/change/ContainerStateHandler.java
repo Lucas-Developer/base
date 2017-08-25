@@ -1,13 +1,17 @@
 package io.subutai.core.hubmanager.impl.environment.state.change;
 
 
+import com.google.common.collect.Lists;
+
+import io.subutai.common.environment.Environment;
 import io.subutai.common.peer.ContainerId;
+import io.subutai.common.peer.EnvironmentContainerHost;
 import io.subutai.common.peer.EnvironmentId;
 import io.subutai.common.peer.PeerId;
+import io.subutai.core.hubmanager.api.RestResult;
 import io.subutai.core.hubmanager.api.exception.HubManagerException;
 import io.subutai.core.hubmanager.impl.environment.state.Context;
 import io.subutai.core.hubmanager.impl.environment.state.StateHandler;
-import io.subutai.core.hubmanager.api.RestResult;
 import io.subutai.core.hubmanager.impl.processor.port_map.DestroyPortMap;
 import io.subutai.hub.share.dto.domain.ContainerPortMapDto;
 import io.subutai.hub.share.dto.domain.PortMapDto;
@@ -37,7 +41,7 @@ public class ContainerStateHandler extends StateHandler
             EnvironmentDto envDto =
                     ctx.restClient.getStrict( path( "/rest/v1/environments/%s", peerDto ), EnvironmentDto.class );
 
-            EnvironmentNodesDto resultDto = null;
+            EnvironmentDto resultEnvDto = null;
 
             for ( EnvironmentNodesDto nodesDto : envDto.getNodes() )
             {
@@ -59,22 +63,20 @@ public class ContainerStateHandler extends StateHandler
 
                             nodeDto.setState( ContainerStateDto.STOPPED );
                         }
-
-                        if ( nodeDto.getState().equals( ContainerStateDto.STARTING ) )
+                        else if ( nodeDto.getState().equals( ContainerStateDto.STARTING ) )
                         {
                             ctx.localPeer.startContainer( containerId );
 
                             nodeDto.setState( ContainerStateDto.RUNNING );
                         }
-
-                        if ( nodeDto.getState().equals( ContainerStateDto.ABORTING ) )
+                        else if ( nodeDto.getState().equals( ContainerStateDto.ABORTING ) )
                         {
                             cleanPortMap( nodesDto.getEnvironmentId(), nodeDto.getContainerId() );
 
                             if ( envDto.isCreatedOnSS() )
                             {
-                                ctx.envManager
-                                        .destroyContainer( nodeDto.getEnvironmentId(), nodeDto.getContainerId(), true );
+                                ctx.envManager.modifyEnvironment( nodeDto.getEnvironmentId(), null,
+                                        Lists.newArrayList( nodeDto.getContainerId() ), null, false );
                             }
                             else
                             {
@@ -85,16 +87,51 @@ public class ContainerStateHandler extends StateHandler
                             nodeDto.setState( ContainerStateDto.FROZEN );
                         }
                     }
+                }
+                else if ( envDto.isCreatedOnSS() )
+                {
+                    Environment env = ctx.envManager.loadEnvironment( nodesDto.getEnvironmentId() );
 
-                    resultDto = nodesDto;
+                    for ( final EnvironmentNodeDto nodeDto : nodesDto.getNodes() )
+                    {
+                        EnvironmentContainerHost containerHost = env.getContainerHostById( nodeDto.getContainerId() );
 
-                    break;
+                        if ( containerHost != null )
+                        {
+                            if ( nodeDto.getState().equals( ContainerStateDto.STOPPING ) )
+                            {
+                                containerHost.stop();
+
+                                nodeDto.setState( ContainerStateDto.STOPPED );
+                            }
+                            else if ( nodeDto.getState().equals( ContainerStateDto.STARTING ) )
+                            {
+                                containerHost.start();
+
+                                nodeDto.setState( ContainerStateDto.RUNNING );
+                            }
+                            else if ( nodeDto.getState().equals( ContainerStateDto.ABORTING ) )
+                            {
+                                cleanPortMap( nodesDto.getEnvironmentId(), nodeDto.getContainerId() );
+
+                                if ( envDto.isCreatedOnSS() )
+                                {
+                                    ctx.envManager.modifyEnvironment( nodeDto.getEnvironmentId(), null,
+                                            Lists.newArrayList( nodeDto.getContainerId() ), null, false );
+                                }
+
+                                nodeDto.setState( ContainerStateDto.FROZEN );
+                            }
+                        }
+                    }
                 }
             }
 
+            resultEnvDto = envDto;
+
             logEnd();
 
-            return resultDto;
+            return resultEnvDto;
         }
         catch ( Exception e )
         {

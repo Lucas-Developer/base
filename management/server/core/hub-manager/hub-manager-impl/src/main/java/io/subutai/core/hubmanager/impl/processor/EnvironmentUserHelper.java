@@ -141,8 +141,8 @@ public class EnvironmentUserHelper
     {
         for ( User user : identityManager.getAllUsers() )
         {
-            // Email contains the user id in Hub
-            if ( user.getEmail().startsWith( userId ) )
+            String email = userId + HubManager.HUB_EMAIL_SUFFIX;
+            if ( user.getEmail().equals( email ) && user.isHubUser() )
             {
                 return user;
             }
@@ -176,7 +176,7 @@ public class EnvironmentUserHelper
         try
         {
             User user = identityManager.createUser( userDto.getFingerprint(), null, "[Hub] " + userDto.getName(), email,
-                    UserType.REGULAR.getId(), KeyTrustLevel.MARGINAL.getId(), false, true );
+                    UserType.HUB.getId(), KeyTrustLevel.MARGINAL.getId(), false, true );
 
             identityManager.setUserPublicKey( user.getId(), userDto.getPublicKey() );
             identityManager.assignUserRole( user, getRole( IdentityManager.ENV_MANAGER_ROLE ) );

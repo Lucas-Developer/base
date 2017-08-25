@@ -120,6 +120,9 @@ public class ResourceHostEntity extends AbstractSubutaiHost implements ResourceH
     @JsonIgnore
     private Set<HostInterface> netInterfaces = new HashSet<>();
 
+    @Column( name = "address" )
+    private String address;
+
 
     @Transient
     protected transient CommandUtil commandUtil = new CommandUtil();
@@ -151,6 +154,8 @@ public class ResourceHostEntity extends AbstractSubutaiHost implements ResourceH
 
         this.instanceType = resourceHostInfo.getInstanceType();
 
+        this.address = resourceHostInfo.getAddress();
+
         setSavedHostInterfaces( resourceHostInfo.getHostInterfaces() );
 
         init();
@@ -175,6 +180,13 @@ public class ResourceHostEntity extends AbstractSubutaiHost implements ResourceH
             netInterface.setHost( this );
             this.netInterfaces.add( netInterface );
         }
+    }
+
+
+    @Override
+    public String getAddress()
+    {
+        return address;
     }
 
 
@@ -912,9 +924,20 @@ public class ResourceHostEntity extends AbstractSubutaiHost implements ResourceH
             //generate registration token for container for 30 min
             String containerToken = getRegistrationManager().generateContainerTTLToken( 30 * 60 * 1000L ).getToken();
 
-            CommandResult result = commandUtil.execute( resourceHostCommands
+
+            CommandResult result = execute( resourceHostCommands
                     .getCloneContainerCommand( template.getId(), containerName, hostname, ip, vlan, environmentId,
-                            containerToken ), this );
+                            containerToken ) );
+
+            //If container clone failed with message containing "{container} already exist", assume this result as
+            // successful and skip the error. See https://github.com/optdyn/hub/issues/3268
+            if ( !result.hasSucceeded() && !result.getStdOut()
+                                                  .contains( String.format( "%s already exist", containerName ) ) )
+            {
+                throw new RuntimeException(
+                        String.format( "Failed to clone container: %s, exit code %d", result.getStdErr(),
+                                result.getExitCode() ) );
+            }
 
             //parse ID from output
 
@@ -962,6 +985,8 @@ public class ResourceHostEntity extends AbstractSubutaiHost implements ResourceH
         setSavedHostInterfaces( hostInfo.getHostInterfaces() );
 
         ResourceHostInfo resourceHostInfo = ( ResourceHostInfo ) hostInfo;
+
+        this.address = resourceHostInfo.getAddress();
 
         for ( ContainerHostInfo info : resourceHostInfo.getContainers() )
         {
