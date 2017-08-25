@@ -16,11 +16,17 @@
         </div>
     -->
 
+
   </div>
 
   <div class="b-workspace__content b-workspace__content_cloud-env">
-
-    <div class="b-cloud-space__table">
+    <a class="b-btn b-btn_green b-btn_search-field-level"
+       href
+       id="subt_link__create-peer"
+       ng-click="environmentViewCtrl.createFrom()">
+      <i class="fa fa-plus"></i> Create
+    </a>
+    <div class="b-cloud-space__row">
       <table id="envTable" datatable="ng"
              ng-init="environmentViewCtrl.initDataTable()"
              dt-options="environmentViewCtrl.dtOptionsInstallTable"
@@ -85,14 +91,14 @@
                  class="b-icon b-icon_edit"
                  tooltips
                  tooltip-template='Edit'
-                 ng-click="environmentViewCtrl.changeView('/environment/simple', environment)"
+                 ng-click="environmentViewCtrl.changeView('/environment/simple/'+environment.id, environment)"
                  style="visibility: visible">
               </a>
               <a href
                  class="b-icon b-icon_edit"
                  tooltips
                  tooltip-template='Edit in advanced mode'
-                 ng-click="environmentViewCtrl.changeView('/environment/advanced', environment)"
+                 ng-click="environmentViewCtrl.changeView('/environment/advanced/'+environment.id, environment)"
                  style="visibility: visible">
               </a>
               <a href

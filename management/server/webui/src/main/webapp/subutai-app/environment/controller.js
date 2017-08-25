@@ -4,25 +4,24 @@ angular.module('subutai.environment.controller', [])
     .controller('EnvironmentViewCtrl', EnvironmentViewCtrl)
     .directive('fileModel', fileModel)
     .directive('onErrorSrc', onErrorSrc)
-	.directive('onReadFile', onReadFile)
-	.filter( 'sshEmail', function () {
-		return function( input, modify )
-		{
-			if( !modify )
-				return input;
-			var newVal = input.split(' ');
-			return newVal[newVal.length - 1];
-		}
-	})
-	.filter('isEmpty', [function() {
-		return function(object, editStatus) {
-			if(editStatus === true || angular.equals({}, object)) {
-				return true
-			} else {
-				return false;
-			}
-		}
-	}]);//.factory('DTLoadingTemplate', dtLoadingTemplate);
+    .directive('onReadFile', onReadFile)
+    .filter('sshEmail', function () {
+        return function (input, modify) {
+            if (!modify)
+                return input;
+            var newVal = input.split(' ');
+            return newVal[newVal.length - 1];
+        }
+    })
+    .filter('isEmpty', [function () {
+        return function (object, editStatus) {
+            if (editStatus === true || angular.equals({}, object)) {
+                return true
+            } else {
+                return false;
+            }
+        }
+    }]);//.factory('DTLoadingTemplate', dtLoadingTemplate);
 
 //	function dtLoadingTemplate() {
 //        return {
@@ -60,6 +59,7 @@ function EnvironmentViewCtrl($scope, $rootScope, environmentService, trackerSrv,
     vm.nodeStatus = 'Add to';
     vm.nodeList = [];
     vm.colors = quotaColors;
+    vm.colors = quotaColors;
     vm.containersType = [];
     vm.containersTypeInfo = [];
     vm.listOfUsers = [];
@@ -89,6 +89,8 @@ function EnvironmentViewCtrl($scope, $rootScope, environmentService, trackerSrv,
     vm.minimizeLogs = minimizeLogs;
     vm.getQuotaColor = getQuotaColor;
     vm.initDataTable = initDataTable;
+    vm.createFrom = createFrom;
+    vm.createEnvironment = createEnvironment;
 
     //share environment functions
     vm.shareEnvironmentWindow = shareEnvironmentWindow;
@@ -98,8 +100,19 @@ function EnvironmentViewCtrl($scope, $rootScope, environmentService, trackerSrv,
     vm.removeUserFromStack = removeUserFromStack;
     vm.humanFileSize = humanFileSize;
 
-    function changeView(view, environment) {
-        $location.path(view+'/'+environment.id); // path not hash
+    function createFrom() {
+        ngDialog.open({
+            template: 'subutai-app/environment/partials/popups/createForm.html',
+            scope: $scope
+        });
+    }
+
+    // function changeView(view, environment) {
+    //     $location.path(view + '/' + (environment ? environment.id : '')); // path not hash
+    // }
+
+    function changeView(view) {
+        $location.path(view); // path not hash
     }
 
     function humanFileSize(bytes, si) {
@@ -325,6 +338,14 @@ function EnvironmentViewCtrl($scope, $rootScope, environmentService, trackerSrv,
 
     }
 
+    function createEnvironment(mode) {
+        console.log(this.activeMode)
+        console.log(mode)
+        // vm.environmentSimpleViewCtrl.editEnvironment()
+        if (mode === 'simple' || mode === 'advanced')
+            changeView('/environment/' + mode + '/')
+    }
+
     function shareEnvironment() {
         var arr = [];
         for (var i = 0; i < vm.users2Add.length; ++i) {
@@ -433,7 +454,7 @@ function EnvironmentViewCtrl($scope, $rootScope, environmentService, trackerSrv,
                     );
 
                     var destroyEnvEvent = new CustomEvent('destroyEnvironment', {'detail': environmentId});
-                    document.getElementById('js-environment-creation').dispatchEvent(destroyEnvEvent);
+                    // document.getElementById('js-environment-creation').dispatchEvent(destroyEnvEvent);
 
                     vm.environments[key].status = 'UNDER_MODIFICATION';
 
@@ -567,14 +588,14 @@ function EnvironmentViewCtrl($scope, $rootScope, environmentService, trackerSrv,
         LOADING_SCREEN();
         environmentService.removeSshKey(vm.sshKeyForEnvironment, sshKey).success(function (data) {
 
-			vm.sshKeysList.splice(index, 1);
-			LOADING_SCREEN('none');
-		}).error( function(data) {
-			SweetAlert.swal("Error", "Error: " + data.ERROR, "error");
-			ngDialog.closeAll();
-			LOADING_SCREEN('none');
-		});
-	}
+            vm.sshKeysList.splice(index, 1);
+            LOADING_SCREEN('none');
+        }).error(function (data) {
+            SweetAlert.swal("Error", "Error: " + data.ERROR, "error");
+            ngDialog.closeAll();
+            LOADING_SCREEN('none');
+        });
+    }
 
     function sshKeyFormat(sshKey) {
         var splitedSSH = sshKey.split('==');

@@ -907,14 +907,14 @@ function AdvancedEnvironmentCtrl($scope, $rootScope, $stateParams, $location, en
 
     function initJointJs() {
 
-        setTimeout(function () {
-            document.getElementById('js-environment-creation').addEventListener('destroyEnvironment', function (e) {
-                if (vm.editingEnv && vm.editingEnv.id == e.detail) {
-                    clearWorkspace();
-                    vm.editingEnv = false;
-                }
-            }, false);
-        }, 1000);
+        // setTimeout(function () {
+        //     document.getElementById('js-environment-creation').addEventListener('destroyEnvironment', function (e) {
+        //         if (vm.editingEnv && vm.editingEnv.id == e.detail) {
+        //             clearWorkspace();
+        //             vm.editingEnv = false;
+        //         }
+        //     }, false);
+        // }, 1000);
 
         paper = new joint.dia.Paper({
             el: $('#js-environment-creation'),
@@ -1014,7 +1014,7 @@ function AdvancedEnvironmentCtrl($scope, $rootScope, $stateParams, $location, en
 
     function editEnvironment(environment) {
 
-        if (environment.dataSource == "hub") {
+        if (environment && environment.dataSource == "hub") {
             SweetAlert.swal("Feature coming soon...", "This environment is created on Hub. Please use Hub to manage it.", "success");
 
             return;
