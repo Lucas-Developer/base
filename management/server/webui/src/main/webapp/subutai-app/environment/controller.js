@@ -30,16 +30,16 @@ angular.module('subutai.environment.controller', [])
 //        };
 //    }
 
-EnvironmentViewCtrl.$inject = ['$scope', '$rootScope', 'environmentService', 'trackerSrv', 'identitySrv', 'SweetAlert', '$resource', '$compile', 'ngDialog', '$timeout', '$sce', '$stateParams', 'DTOptionsBuilder', 'DTColumnDefBuilder', '$state'];
+EnvironmentViewCtrl.$inject = ['$scope', '$rootScope', '$location', 'environmentService', 'trackerSrv', 'identitySrv', 'SweetAlert', '$resource', '$compile', 'ngDialog', '$timeout', '$sce', '$stateParams', 'DTOptionsBuilder', 'DTColumnDefBuilder', '$state'];
 fileModel.$inject = ['$parse'];
 
 var fileUploader = {};
 
-function EnvironmentViewCtrl($scope, $rootScope, environmentService, trackerSrv, identitySrv, SweetAlert, $resource, $compile, ngDialog, $timeout, $sce, $stateParams, DTOptionsBuilder, DTColumnDefBuilder, $state) {
+function EnvironmentViewCtrl($scope, $rootScope, $location, environmentService, trackerSrv, identitySrv, SweetAlert, $resource, $compile, ngDialog, $timeout, $sce, $stateParams, DTOptionsBuilder, DTColumnDefBuilder, $state) {
 
 	var vm = this;
 
-	vm.activeMode = 'simple';
+	vm.activeMode = 'list';
 
 	vm.currentEnvironment = {};
 
@@ -72,6 +72,7 @@ function EnvironmentViewCtrl($scope, $rootScope, environmentService, trackerSrv,
 	vm.changeMode = changeMode;
 
 	vm.destroyEnvironment = destroyEnvironment;
+	vm.editEnvironment = editEnvironment;
 	vm.sshKey = sshKey;
 	vm.getSSHfromFile = getSSHfromFile;
 	vm.addSshKey = addSshKey;
@@ -88,13 +89,17 @@ function EnvironmentViewCtrl($scope, $rootScope, environmentService, trackerSrv,
 	vm.minimizeLogs = minimizeLogs;
 	vm.getQuotaColor = getQuotaColor;
 	vm.initDataTable = initDataTable;
-
+	
 	//share environment functions
 	vm.shareEnvironmentWindow = shareEnvironmentWindow;
 	vm.shareEnvironment = shareEnvironment;
 	vm.addUser2Stack = addUser2Stack;
 	vm.removeUserFromStack = removeUserFromStack;
 	vm.humanFileSize = humanFileSize;
+
+	function editEnvironment(environmentId) {
+        $location.path('/environment/simple/'+environmentId)
+    }
 
     function humanFileSize(bytes, si) {
         var thresh = si ? 1000 : 1024;
@@ -423,8 +428,8 @@ function EnvironmentViewCtrl($scope, $rootScope, environmentService, trackerSrv,
 						}
 					);
 
-					var destroyEnvEvent = new CustomEvent('destroyEnvironment', {'detail': environmentId});
-					document.getElementById('js-environment-creation').dispatchEvent(destroyEnvEvent);
+					// var destroyEnvEvent = new CustomEvent('destroyEnvironment', {'detail': environmentId});
+					// document.getElementById('js-environment-creation').dispatchEvent(destroyEnvEvent);
 
 					vm.environments[key].status = 'UNDER_MODIFICATION';
 

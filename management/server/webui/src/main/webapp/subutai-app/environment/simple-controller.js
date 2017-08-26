@@ -3,9 +3,9 @@
 angular.module('subutai.environment.simple-controller', [])
 .controller('EnvironmentSimpleViewCtrl', EnvironmentSimpleViewCtrl);
 
-EnvironmentSimpleViewCtrl.$inject = ['$scope', '$rootScope', 'environmentService', 'trackerSrv', 'SweetAlert', 'ngDialog', '$timeout', 'identitySrv'];
+EnvironmentSimpleViewCtrl.$inject = ['$scope', '$rootScope', 'environmentService', 'trackerSrv', 'SweetAlert', 'ngDialog', '$timeout', 'identitySrv', '$stateParams', '$location'];
 
-function EnvironmentSimpleViewCtrl($scope, $rootScope, environmentService, trackerSrv, SweetAlert, ngDialog, $timeout, identitySrv) {
+function EnvironmentSimpleViewCtrl($scope, $rootScope, environmentService, trackerSrv, SweetAlert, ngDialog, $timeout, identitySrv, $stateParams, $location) {
 
 	var vm = this;
 
@@ -19,6 +19,7 @@ function EnvironmentSimpleViewCtrl($scope, $rootScope, environmentService, track
 	vm.popupLogState = 'full';
 
 	vm.currentEnvironment = {};
+	$scope.environmentMode = false
 
 	vm.buildEnvironment = buildEnvironment;
 	vm.editEnvironment = editEnvironment;
@@ -40,6 +41,8 @@ function EnvironmentSimpleViewCtrl($scope, $rootScope, environmentService, track
 	vm.environment2BuildName = '';
 	vm.buildCompleted = false;
 	vm.selectedPlugin = false;
+	vm.containersType = [];
+	vm.containersTypeInfo = [];
 
 	// functions
 
@@ -51,12 +54,18 @@ function EnvironmentSimpleViewCtrl($scope, $rootScope, environmentService, track
 
 	vm.addContainer = addContainer;
 	vm.closePopup = closePopup;
+	vm.humanFileSize = humanFileSize
 
 	//plugins actions
 	vm.selectPlugin = selectPlugin;
 	vm.setTemplatesByPlugin = setTemplatesByPlugin;
     vm.loadPrivateTemplates = loadPrivateTemplates;
+	vm.changeMode = changeMode;
 
+	function changeMode(mode) {
+		$location.path('/environment/advanced/' + (vm.currentEnvironment.id ? vm.currentEnvironment.id: ''))
+ 	}
+ 	
     function loadPrivateTemplates(){
         environmentService.getPrivateTemplates()
             .then(function (data) {
@@ -75,9 +84,80 @@ function EnvironmentSimpleViewCtrl($scope, $rootScope, environmentService, track
 
     loadTemplates();
 
-    $rootScope.$on('kurjunTokenSet', function(event, data){
+    function loadEnvironment(environmentId) {
+        if (environmentId) {
+            environmentService.getEnvironments().success(function (data) {
+                var environmentsList = [];
+                for (var i = 0; i < data.length; ++i) {
+                    data[i].containersByQuota = getContainersSortedByQuota(data[i].containers);
+                    environmentsList.push(data[i]);
+                }
+                vm.currentEnvironment = findEnvironment(environmentsList, environmentId)
+                editEnvironment(vm.currentEnvironment)
+            }).error(function (error) {
+                console.log(error);
+            });
+        }
+    }
+
+    function findEnvironment(environments, environmentId) {
+        var result = null;
+        for (var i = 0; i < environments.length; i++) {
+            if (environments[i].id === environmentId) {
+                result = environments[i];
+                break;
+            }
+        }
+        return result;
+    }
+
+    $rootScope.$on('kurjunTokenSet', function (event, data) {
         loadPrivateTemplates();
     });
+
+    function getContainersSortedByQuota(containers) {
+
+        var sortedContainers = containers.length > 0 ? {} : null;
+
+        for (var index = 0; index < containers.length; index++) {
+
+            var container = containers[index];
+            var remoteProxyContainer = !container.local && container.dataSource == "hub";
+
+            // We don't show on UI containers created by Hub, located on other peers.
+            // See details: io.subutai.core.environment.impl.adapter.EnvironmentAdapter.
+            if (remoteProxyContainer) {
+                continue;
+            }
+
+            var quotaSize = containers[index].type;
+            var templateName = containers[index].templateName;
+
+            if (!sortedContainers[quotaSize]) {
+                sortedContainers[quotaSize] = {};
+                sortedContainers[quotaSize].quantity = 1;
+                sortedContainers[quotaSize].containers = {};
+                sortedContainers[quotaSize].containers[templateName] = 1;
+            } else {
+                if (!sortedContainers[quotaSize].containers[templateName]) {
+                    sortedContainers[quotaSize].quantity += 1;
+                    sortedContainers[quotaSize].containers[templateName] = 1;
+                } else {
+                    sortedContainers[quotaSize].quantity += 1;
+                    sortedContainers[quotaSize].containers[templateName] += 1;
+                }
+            }
+        }
+
+        for (var item in sortedContainers) {
+            sortedContainers[item].tooltip = "";
+            for (var container in sortedContainers[item].containers) {
+                sortedContainers[item].tooltip += container + ":&nbsp;" + sortedContainers[item].containers[container] + "<br/>";
+            }
+            sortedContainers[item].tooltip += "Quota: " + item;
+        }
+        return sortedContainers;
+    }
 
     function addUniqueTemplates(filteredTemplates, groupedTemplates){
         for( var i in groupedTemplates){
@@ -877,19 +957,19 @@ function EnvironmentSimpleViewCtrl($scope, $rootScope, environmentService, track
 
 	function initJointJs() {
 
-		setTimeout(function () {
-			document.getElementById('js-environment-creation').addEventListener('destroyEnvironment', function (e) {
-				if (vm.currentEnvironment && vm.currentEnvironment.id == e.detail) {
-					clearWorkspace();
-					vm.currentEnvironment = {};
-				}
-			}, false);
-		}, 1000);
+		// setTimeout(function () {
+		// 	document.getElementById('js-environment-creation').addEventListener('destroyEnvironment', function (e) {
+		// 		if (vm.currentEnvironment && vm.currentEnvironment.id == e.detail) {
+		// 			clearWorkspace();
+		// 			vm.currentEnvironment = {};
+		// 		}
+		// 	}, false);
+		// }, 1000);
 
 		var paper = new joint.dia.Paper({
 			el: $('#js-environment-creation'),
-			width: '100%',
-			height: '100%',
+			width: '2000px',
+			height: '2000px',
 			model: graph,
 			gridSize: 1
 		});
@@ -996,6 +1076,7 @@ function EnvironmentSimpleViewCtrl($scope, $rootScope, environmentService, track
 
 	function editEnvironment(environment) {
 
+		console.log(environment)
 		if (environment.dataSource == "hub") {
 			SweetAlert.swal("Feature coming soon...", "This environment is created on Hub. Please use Hub to manage it.", "success");
 
@@ -1129,6 +1210,47 @@ function EnvironmentSimpleViewCtrl($scope, $rootScope, environmentService, track
 		}
 	}
 
+    function humanFileSize(bytes, si) {
+        var thresh = si ? 1000 : 1024;
+        if (Math.abs(bytes) < thresh) {
+            return bytes + ' B';
+        }
+        var units = si
+            ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+            : ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+        var u = -1;
+        do {
+            bytes /= thresh;
+            ++u;
+        } while (Math.abs(bytes) >= thresh && u < units.length - 1);
+        return bytes.toFixed(1) + ' ' + units[u];
+    }
+
+    environmentService.getContainersType()
+        .success(function (data) {
+            vm.containersType = data;
+        })
+        .error(function (data) {
+            VARS_MODAL_ERROR(SweetAlert, data);
+        });
+
+    environmentService.getContainersTypesInfo()
+        .success(function (data) {
+            vm.containersTypeInfo = [];
+
+            for (var i = 0; i < data.length; i++) {
+                var type = data[i].key.split(/\.(.+)?/)[0];
+                var property = data[i].key.split(/\.(.+)?/)[1];
+
+                if (vm.containersTypeInfo[type] === undefined) {
+                    vm.containersTypeInfo[type] = {};
+                }
+
+                vm.containersTypeInfo[type][property] = data[i].value.replace(/iB/ig, "B");
+            }
+        });
+	
+	loadEnvironment($stateParams.environmentId)
 }
 
 function shortenIdName( name, factor )
